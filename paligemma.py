@@ -3,11 +3,14 @@ import torch
 import argparse
 import numpy as np
 import pandas as pd
+from PIL import Image
 import torch.nn.functional as F
-from qwen_vl_utils import process_vision_info
-from transformers import Qwen2_5_VLForConditionalGeneration, AutoTokenizer, AutoProcessor
+from transformers import (
+    PaliGemmaProcessor,
+    PaliGemmaForConditionalGeneration,
+)
 
-parser = argparse.ArgumentParser(description="Evaluate Qwen2.5-VL-3B-Instruct.")
+parser = argparse.ArgumentParser(description="Evaluate paligemma2-3b-mix-224.")
 parser.add_argument("--img_dir", type=str, required=True, help="Directory containing images.")
 parser.add_argument("--output_dir", type=str, required=True, help="Path to output directory where results will be saved.")
 args = parser.parse_args()
@@ -19,8 +22,8 @@ trait_words = df['WORD_ENGLISH'].tolist()
 
 img_paths = pd.read_csv('selected_images.csv')['file'].tolist()
 
-model = Qwen2_5_VLForConditionalGeneration.from_pretrained("Qwen/Qwen2.5-VL-3B-Instruct", torch_dtype=torch.bfloat16, device_map="auto")
-processor = AutoProcessor.from_pretrained("Qwen/Qwen2.5-VL-3B-Instruct")
+model = PaliGemmaForConditionalGeneration.from_pretrained("google/paligemma2-3b-mix-224", torch_dtype=torch.bfloat16, device_map="auto")
+processor = PaliGemmaProcessor.from_pretrained("google/paligemma2-3b-mix-224")
 
 yes_token_id = processor.tokenizer.encode("Yes", add_special_tokens=False)[0]
 no_token_id = processor.tokenizer.encode("No", add_special_tokens=False)[0]
@@ -40,49 +43,30 @@ for trait in trait_words:
         response = np.empty(5, dtype='object')
         yes_prob = np.zeros(5)
         no_prob = np.zeros(5)
+        img_path = os.path.join(args.img_dir, img_file)
+        img = Image.open(img_path).convert("RGB")
 
         for idx, template in enumerate(question_templates):
             question = template.format(trait)
-            messages = [
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "image",
-                            "image": "file:///"+os.path.join(args.img_dir, img_file)
-                        },
-                        {"type": "text", "text": f"Instructions: Analyze the provided image and answer the following question with exactly one of these responses: Yes or No.\
+            prompt = f"Instructions: Analyze the provided image and answer the following question with exactly one of these responses: Yes or No.\
                                                 Question: {question}\
-                                                Response format: Yes or No"},
-                    ],
-                }
-            ]
-
-            text = processor.apply_chat_template(
-                messages, tokenize=False, add_generation_prompt=True
-            )
-            image_inputs, video_inputs = process_vision_info(messages)
-            inputs = processor(
-                text=[text],
-                images=image_inputs,
-                videos=video_inputs,
-                padding=True,
-                return_tensors="pt",
-            ).to(model.device)
+                                                Response format: Yes or No"
+            inputs = processor(text=prompt, images=img, return_tensors="pt").to(torch.bfloat16).to(model.device)
+            input_len = inputs["input_ids"].shape[-1]
 
             with torch.no_grad():
-                
                 outputs = model(**inputs)
+                # shape: [batch_size, seq_len, vocab_size]
                 last_token_logits = outputs.logits[:, -1, :]
                 probs = F.softmax(last_token_logits, dim=-1)
                 probability_of_yes = probs[0, yes_token_id].item()
                 yes_prob[idx] = probability_of_yes*100
                 probability_of_no = probs[0, no_token_id].item()
                 no_prob[idx] = probability_of_no*100
-
+            
                 generated_ids = model.generate(**inputs, max_new_tokens=10)
                 generated_ids_trimmed = [
-                    out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
+                    out_ids[len(in_ids):] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
                 ]
                 output_text = processor.batch_decode(
                     generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
@@ -97,4 +81,4 @@ for trait in trait_words:
     res_df = pd.DataFrame(result)
     expanded_cols = [res_df[col].apply(pd.Series).add_prefix(f"{col}_") for col in ['response', 'no_prob', 'yes_prob']]
     res_df_final = pd.concat([res_df.drop(columns=['response', 'no_prob', 'yes_prob'])] + expanded_cols, axis=1)
-    res_df_final.to_csv(os.path.join(args.output_dir, f'Qwen2.5-VL-3B-Instruct_{trait}.csv'), index=False)             
+    res_df_final.to_csv(os.path.join(args.output_dir, f'paligemma2-3b-mix-224_{trait}.csv'), index=False)

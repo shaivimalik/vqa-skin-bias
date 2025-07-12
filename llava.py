@@ -22,8 +22,8 @@ img_paths = pd.read_csv('selected_images.csv')['file'].tolist()
 model = LlavaForConditionalGeneration.from_pretrained("llava-hf/llava-1.5-7b-hf", torch_dtype=torch.float16, device_map="auto")
 processor = AutoProcessor.from_pretrained("llava-hf/llava-1.5-7b-hf")
 
-yes_token_id = processor.tokenizer.encode("YES", add_special_tokens=False)[0]
-no_token_id = processor.tokenizer.encode("NO", add_special_tokens=False)[0]
+yes_token_id = processor.tokenizer.encode("Yes", add_special_tokens=False)[0]
+no_token_id = processor.tokenizer.encode("No", add_special_tokens=False)[0]
 
 question_templates = [
             "Is the person in the image {}?",
@@ -33,9 +33,8 @@ question_templates = [
             "Looking at this image, are they {}?"
             ]
 
-result = {'img':[], 'response':[], 'yes_prob':[], 'no_prob':[]}
-
 for trait in trait_words:
+    result = {'img':[], 'response':[], 'yes_prob':[], 'no_prob':[]}
     for img_file in img_paths:
         response = np.empty(5, dtype='object')
         yes_prob = np.zeros(5)
@@ -49,9 +48,9 @@ for trait in trait_words:
                     "role": "user",
                     "content": [
                         {"type": "image", "image": img},
-                        {"type": "text", "text": f"Instructions: Analyze the provided image and answer the following question with exactly one of these responses: YES or NO.\
+                        {"type": "text", "text": f"Instructions: Analyze the provided image and answer the following question with exactly one of these responses: Yes or No.\
                                                 Question: {question}\
-                                                Response format: YES or NO"},
+                                                Response format: Yes or No"},
                     ],
                 },
             ]
