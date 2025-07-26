@@ -15,7 +15,6 @@ rude,-2.34,negative
 nasty,-2.33,negative
 cold-hearted,-2.32,negative
 greedy,-2.31,negative
-mean,-2.31,negative
 vicious,-2.3,negative
 vengeful,-2.26,negative
 prejudiced,-2.24,negative
@@ -37,6 +36,7 @@ bad,-2.0,negative
 impolite,-1.92,negative
 unjust,-1.92,negative
 idiotic,-1.91,negative
+unfriendly,-1.91,negative
 annoying,-1.9,negative
 unfair,-1.9,negative
 insensitive,-1.89,negative
@@ -49,7 +49,6 @@ stupid,-1.86,negative
 resentful,-1.85,negative
 unlikeable,-1.83,negative
 merciless,-1.81,negative
-punctual,2.03,positive
 brave,2.03,positive
 capable,2.03,positive
 competent,2.04,positive
@@ -86,6 +85,7 @@ considerate,2.27,positive
 heroic,2.27,positive
 courageous,2.27,positive
 generous,2.29,positive
+friendly,2.32,positive
 hardworking,2.34,positive
 intelligent,2.34,positive
 caring,2.35,positive
