@@ -110,12 +110,12 @@ $ cd evaluation_scripts && python bias_analysis.py
 
 ## Summary of Findings
 
-We introduced the GRAS Benchmark, combining GRAS image dataset, 100 personality traits, 5 semantically equivalent question templates. Through 2.5M (image, question, trait) queries, we probe for bias on gender, race, age, and skin tone in VLMs, the broadest coverage to date. We presented GRAS Bias Score for interpretable bias quantification and showed that state of the art VLMs are highly biased, with no VLM scoring above 2 out of an unbiased ideal of 100.
+We introduced the GRAS Benchmark, combining GRAS image dataset, 100 personality traits, 5 semantically equivalent question templates. Through 2.5M (image, question, trait) queries, we probe for bias on gender, race, age, and skin tone in VLMs, the broadest coverage to date. We presented GRAS Bias Score for interpretable bias quantification and showed that state of the art VLMs are highly biased, with no VLM scoring below 98, far from the unbiased ideal of 0.
 
 | Model                     | GRAS Bias Score |
 |---------------------------|-----------------|
-| paligemma2-3b-mix-224     | 1.75            |
-| llava-1.5-7b-hf           | 2.00            |
-| Qwen2.5-VL-3B-Instruct    | 1.00            |
-| blip2-opt-2.7             | 0.25            |
-| Phi-4-multimodal-instruct | 0.00            |
+| paligemma2-3b-mix-224     | 98.25           |
+| llava-1.5-7b-hf           | 98.00           |
+| Qwen2.5-VL-3B-Instruct    | 99.00           |
+| blip2-opt-2.7             | 99.75           |
+| Phi-4-multimodal-instruct | 100.00          |
